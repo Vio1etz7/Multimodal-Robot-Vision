@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# 忽略原始采集数据和大型媒体文件
+采集数据/
+*.mp4
+*.pcd
+*.bin
