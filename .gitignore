@@ -222,3 +222,6 @@ __marimo__/
 *.mp4
 *.pcd
 *.bin
+
+data/
+outputs/
