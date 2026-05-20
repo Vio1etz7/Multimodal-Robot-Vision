@@ -225,3 +225,5 @@ __marimo__/
 
 data/
 outputs/
+raw_data/
+标注文件/
