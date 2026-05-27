@@ -32,8 +32,17 @@
         </div>
 
         <div class="display-area" v-loading="loading2D">
-          <div v-if="!result2DUrl" class="empty-state">NO DATA</div>
-          <img v-else :src="result2DUrl" class="panel-img" />
+          <div v-if="!result2DUrl && !original2DUrl" class="empty-state">NO DATA</div>
+          <div v-else class="comparison-container">
+            <div class="comparison-panel">
+              <div class="panel-label">ORIGINAL</div>
+              <img v-if="original2DUrl" :src="original2DUrl" class="panel-img" />
+            </div>
+            <div class="comparison-panel">
+              <div class="panel-label">SEGMENTATION</div>
+              <img v-if="result2DUrl" :src="result2DUrl" class="panel-img" />
+            </div>
+          </div>
         </div>
 
         <div v-if="result2DUrl && detectedTargets.length > 0" class="meta-dashboard">
@@ -96,6 +105,7 @@ interface DetectedTarget {
 
 const file2D = ref<File | null>(null)
 const result2DUrl = ref('')
+const original2DUrl = ref('')
 const loading2D = ref(false)
 const detectedTargets = ref<DetectedTarget[]>([])
 
@@ -107,16 +117,19 @@ const handle2DFileChange = (uploadFile: any) => {
 const run2DAnalysis = async () => {
   if (!file2D.value) return ElMessage.error('缺失输入数据')
   loading2D.value = true
-  detectedTargets.value = [] 
-  
+  detectedTargets.value = []
+  original2DUrl.value = ''
+  result2DUrl.value = ''
+
   const formData = new FormData()
   formData.append('file', file2D.value)
   try {
     const res = await fetch('/api/analyze/2d', { method: 'POST', body: formData })
     const data = await res.json()
     if (data.status === 'success') {
+      original2DUrl.value = data.original_url
       result2DUrl.value = data.result_url
-      detectedTargets.value = data.targets 
+      detectedTargets.value = data.targets
     }
   } catch (err) {
     ElMessage.error('通信异常')
@@ -354,19 +367,52 @@ onBeforeUnmount(() => {
   position: relative;
 }
 
+.comparison-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #0b0c0d;
+}
+
+.comparison-panel {
+  display: flex;
+  flex-direction: column;
+  background-color: #0b0c0d;
+  border-right: 1px solid #262930;
+  overflow: hidden;
+}
+
+.comparison-panel:last-child {
+  border-right: none;
+}
+
+.panel-label {
+  background-color: #1c1d21;
+  border-bottom: 1px solid #262930;
+  padding: 8px 12px;
+  font-size: 10px;
+  color: #636873;
+  font-weight: bold;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.comparison-panel .panel-img {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .empty-state {
   color: #3b3f4a;
   font-size: 14px;
   letter-spacing: 2px;
-  pointer-events: none; /* 防止遮挡 canvas 的鼠标事件 */
+  pointer-events: none;
   position: absolute;
   z-index: 10;
-}
-
-.panel-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }
 
 :deep(.el-loading-mask) {

@@ -21,13 +21,18 @@ async def analyze_2d(file: UploadFile = File(...)):
     file_location = f"data/{file.filename}"
     with open(file_location, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-    
+
     # 接收路径和目标对象
-    result_path, targets = process_image(file_location)
-    
+    original_path, result_path, targets = process_image(file_location)
+
+    # 将路径转换为URL格式（使用正斜杠）
+    original_url = f"/outputs/{os.path.basename(original_path)}"
+    result_url = f"/outputs/{os.path.basename(result_path)}"
+
     return {
-        "status": "success", 
-        "result_url": f"/{result_path}",
+        "status": "success",
+        "original_url": original_url,
+        "result_url": result_url,
         "targets": targets  # 🌟 结构为: [{"name": "wall", "color": "#1f77b4"}, ...]
     }
 
@@ -47,6 +52,8 @@ async def analyze_3d(file: UploadFile = File(...)):
         "result_url": f"/{result_path}"
     }
 
+app.mount("/", StaticFiles(directory="dist", html=True), name="frontend")
+
 if __name__ == "__main__":
     print("服务器启动中: http://localhost:8000")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
